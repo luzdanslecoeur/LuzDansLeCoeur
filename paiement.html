@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Luz dans le Cœur — Paiement</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:#2d8a4e;
+  font-family:'Jost',sans-serif;
+  cursor:none;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* grain */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1000;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size:150px;opacity:.45;mix-blend-mode:overlay;
+}
+
+/* CURSOR */
+#cur{position:fixed;width:8px;height:8px;border-radius:50%;background:#fff;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;}
+#curRing{position:fixed;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.3);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .2s,height .2s;}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 48px;
+  background:rgba(30,90,50,.7);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.nav-logo{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:#e8f5ee;letter-spacing:.5px;}
+.nav-back{
+  font-family:'Jost',sans-serif;font-size:10px;font-weight:300;
+  letter-spacing:2px;text-transform:uppercase;color:rgba(232,245,238,.55);
+  cursor:pointer;transition:color .3s;background:none;border:none;
+  display:flex;align-items:center;gap:8px;
+}
+.nav-back:hover{color:#e8f5ee;}
+.nav-back::before{content:'←';}
+
+/* HERO */
+.hero{
+  padding:110px 48px 60px;
+  text-align:center;
+}
+.hero-eyebrow{
+  font-family:'Jost',sans-serif;font-size:10px;font-weight:200;
+  letter-spacing:5px;text-transform:uppercase;
+  color:rgba(232,245,238,.5);margin-bottom:14px;
+  animation:fadeUp .8s ease both;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(36px,5vw,60px);
+  font-weight:400;font-style:italic;
+  color:#e8f5ee;line-height:1.1;
+  margin-bottom:12px;
+  animation:fadeUp .8s .1s ease both;
+}
+.hero-sub{
+  font-family:'Jost',sans-serif;font-size:14px;font-weight:300;
+  color:rgba(232,245,238,.55);
+  animation:fadeUp .8s .2s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* MAIN LAYOUT */
+.checkout-wrap{
+  max-width:1000px;
+  margin:0 auto;
+  padding:0 48px 100px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px;
+  align-items:start;
+}
+
+/* STEP 1 — SELECT BOOK */
+.panel{
+  background:rgba(255,255,255,.97);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.15);
+}
+.panel-header{
+  padding:24px 28px 20px;
+  border-bottom:1px solid rgba(45,138,78,.1);
+  display:flex;align-items:center;gap:12px;
+}
+.panel-step{
+  width:28px;height:28px;border-radius:50%;
+  background:#2d8a4e;color:#fff;
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.panel-title{
+  font-family:'Playfair Display',serif;font-size:18px;
+  font-style:italic;color:#1a1a1a;
+}
+
+/* BOOK LIST */
+.book-list{padding:16px 20px;}
+.book-item{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 12px;border-radius:12px;
+  cursor:pointer;transition:all .25s;
+  border:2px solid transparent;
+  margin-bottom:8px;
+}
+.book-item:last-child{margin-bottom:0;}
+.book-item:hover{background:rgba(45,138,78,.05);}
+.book-item.selected{
+  border-color:#2d8a4e;
+  background:rgba(45,138,78,.07);
+}
+.bi-radio{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid #c8d8c8;flex-shrink:0;
+  transition:all .25s;position:relative;
+  background:#fff;
+}
+.book-item.selected .bi-radio{border-color:#2d8a4e;}
+.book-item.selected .bi-radio::after{
+  content:'';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:8px;height:8px;border-radius:50%;
+  background:#2d8a4e;
+}
+.bi-img{
+  width:48px;height:60px;border-radius:8px;flex-shrink:0;
+  background-size:cover;background-position:center;
+  filter:saturate(.65) brightness(.88);
+}
+.bi-info{flex:1;min-width:0;}
+.bi-cat{
+  font-family:'Jost',sans-serif;font-size:9px;font-weight:300;
+  letter-spacing:2.5px;text-transform:uppercase;
+  color:#2d8a4e;margin-bottom:4px;
+}
+.bi-name{
+  font-family:'Playfair Display',serif;font-size:15px;
+  font-style:italic;color:#1a1a1a;line-height:1.2;
+}
+.bi-price{
+  font-family:'Playfair Display',serif;font-size:17px;
+  font-style:italic;color:#1a1a1a;flex-shrink:0;
+  font-weight:400;
+}
+
+/* DIVIDER */
+.panel-divider{height:1px;background:rgba(45,138,78,.1);margin:0 20px;}
+
+/* PACK CTA */
+.pack-cta{
+  margin:16px 20px;padding:16px 18px;
+  background:linear-gradient(135deg,rgba(45,138,78,.08),rgba(45,138,78,.04));
+  border:1px solid rgba(45,138,78,.2);border-radius:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.pack-cta-text{
+  font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:#3a6a48;
+  line-height:1.5;
+}
+.pack-cta-text strong{display:block;font-weight:500;font-size:13px;color:#1a3a24;}
+.pack-tag{
+  background:#2d8a4e;color:#fff;padding:6px 14px;border-radius:50px;
+  font-family:'Jost',sans-serif;font-size:10px;font-weight:300;
+  letter-spacing:1.5px;white-space:nowrap;cursor:pointer;
+  border:none;transition:background .3s;
+}
+.pack-tag:hover{background:#1a5a32;}
+
+/* STEP 2 — PAYMENT */
+.payment-panel{}
+
+.pay-methods{padding:16px 20px;}
+
+.pay-method{
+  border:2px solid rgba(26,26,26,.1);border-radius:14px;
+  margin-bottom:12px;overflow:hidden;
+  transition:border-color .3s;cursor:pointer;
+}
+.pay-method:last-child{margin-bottom:0;}
+.pay-method.active{border-color:#2d8a4e;}
+
+.pm-header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 18px;
+  background:#fff;
+}
+.pm-radio{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid #c8d8c8;flex-shrink:0;
+  position:relative;transition:all .25s;background:#fff;
+}
+.pay-method.active .pm-radio{border-color:#2d8a4e;}
+.pay-method.active .pm-radio::after{
+  content:'';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:8px;height:8px;border-radius:50%;background:#2d8a4e;
+}
+.pm-icon{
+  width:42px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;flex-shrink:0;
+}
+.pm-icon.paypal{background:#003087;color:#fff;font-family:'Jost',sans-serif;letter-spacing:-1px;font-size:11px;}
+.pm-icon.lydia{background:#8b5cf6;color:#fff;font-family:'Jost',sans-serif;font-size:11px;}
+.pm-icon.virement{background:#1a3a24;color:#8fc4a0;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:-.5px;}
+.pm-name{
+  font-family:'Jost',sans-serif;font-size:13px;font-weight:400;color:#1a1a1a;
+}
+.pm-desc{
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:rgba(26,26,26,.45);
+  margin-top:2px;
+}
+.pm-badge{
+  margin-left:auto;padding:3px 10px;border-radius:50px;
+  font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:1px;
+  text-transform:uppercase;
+}
+.pm-badge.fast{background:rgba(45,138,78,.1);color:#2d8a4e;}
+.pm-badge.secure{background:rgba(59,130,246,.1);color:#2563eb;}
+
+/* Payment body — details that expand */
+.pm-body{
+  padding:0 18px;
+  max-height:0;overflow:hidden;
+  transition:max-height .4s ease, padding .4s ease;
+  background:#f9fdf9;border-top:1px solid rgba(45,138,78,.08);
+}
+.pay-method.active .pm-body{max-height:320px;padding:18px 18px;}
+
+/* PayPal body */
+.paypal-info{
+  font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:#4a4a4a;
+  line-height:1.7;margin-bottom:14px;
+}
+.paypal-link{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 18px;background:#003087;color:#fff;border-radius:10px;
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:400;letter-spacing:1px;
+  text-decoration:none;text-transform:uppercase;
+  border:none;cursor:pointer;transition:background .3s;width:100%;justify-content:center;
+}
+.paypal-link:hover{background:#002070;}
+.paypal-sub{font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:rgba(26,26,26,.4);margin-top:10px;text-align:center;}
+
+/* Lydia body */
+.lydia-info{font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:#4a4a4a;line-height:1.7;margin-bottom:14px;}
+.lydia-steps{list-style:none;margin-bottom:14px;}
+.lydia-steps li{
+  font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:#5a5a5a;
+  padding:6px 0;border-bottom:1px solid rgba(139,92,246,.08);
+  display:flex;align-items:center;gap:10px;
+}
+.lydia-steps li::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:#8b5cf6;flex-shrink:0;
+}
+.lydia-handle{
+  background:#f5f3ff;border:1px solid rgba(139,92,246,.25);
+  border-radius:10px;padding:10px 16px;
+  font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#5b21b6;
+  text-align:center;cursor:pointer;transition:background .3s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.lydia-handle:hover{background:#ede9fe;}
+.copy-btn{
+  font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:1px;
+  text-transform:uppercase;color:rgba(91,33,182,.5);
+  background:none;border:none;cursor:pointer;transition:color .2s;
+}
+.copy-btn:hover{color:#5b21b6;}
+
+/* Virement body */
+.virement-info{font-family:'Jost',sans-serif;font-size:13px;font-weight:300;color:#4a4a4a;line-height:1.7;margin-bottom:14px;}
+.bank-detail{
+  background:#f0faf4;border:1px solid rgba(45,138,78,.15);
+  border-radius:10px;padding:14px 18px;margin-bottom:10px;
+}
+.bank-label{font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:rgba(45,138,78,.6);margin-bottom:4px;}
+.bank-value{
+  font-family:'Playfair Display',serif;font-size:15px;font-style:italic;color:#1a3a24;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.bank-note{font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:rgba(26,26,26,.4);margin-top:10px;line-height:1.6;}
+
+/* ORDER SUMMARY */
+.summary-panel{
+  background:rgba(255,255,255,.97);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 8px 40px rgba(0,0,0,.15);
+  position:sticky;top:100px;
+}
+.summary-body{padding:24px 28px;}
+.sum-title{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:#1a1a1a;margin-bottom:20px;}
+.sum-book{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 0;border-bottom:1px solid rgba(26,26,26,.07);
+  margin-bottom:14px;
+}
+.sum-book-img{
+  width:42px;height:54px;border-radius:7px;flex-shrink:0;
+  background-size:cover;background-position:center;
+  filter:saturate(.65);
+}
+.sum-book-name{font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:#1a1a1a;line-height:1.3;}
+.sum-book-cat{font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:#2d8a4e;margin-top:4px;}
+.sum-empty{
+  font-family:'Playfair Display',serif;font-size:14px;font-style:italic;
+  color:rgba(26,26,26,.3);text-align:center;padding:20px 0 14px;border-bottom:1px solid rgba(26,26,26,.07);margin-bottom:14px;
+}
+.sum-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.sum-label{font-family:'Jost',sans-serif;font-size:12px;font-weight:300;color:rgba(26,26,26,.5);}
+.sum-value{font-family:'Jost',sans-serif;font-size:13px;font-weight:400;color:#1a1a1a;}
+.sum-total{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-top:14px;border-top:2px solid rgba(45,138,78,.2);margin-top:4px;margin-bottom:22px;
+}
+.sum-total-label{font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#1a1a1a;}
+.sum-total-value{font-family:'Playfair Display',serif;font-size:22px;font-style:italic;color:#1a3a24;font-weight:700;}
+
+.btn-confirm{
+  width:100%;padding:16px;
+  background:#2d8a4e;color:#fff;
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:400;
+  letter-spacing:3px;text-transform:uppercase;
+  border:none;border-radius:12px;cursor:pointer;
+  transition:all .35s;
+  position:relative;overflow:hidden;
+}
+.btn-confirm::after{
+  content:'';position:absolute;inset:0;
+  background:rgba(255,255,255,.1);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .35s;
+}
+.btn-confirm:hover::after{transform:scaleX(1);}
+.btn-confirm:hover{background:#1a5a32;box-shadow:0 8px 24px rgba(45,138,78,.3);}
+.btn-confirm:disabled{background:#b8d4c0;cursor:not-allowed;}
+.btn-confirm:disabled::after{display:none;}
+
+.secure-note{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  margin-top:12px;
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:300;color:rgba(26,26,26,.4);
+}
+.secure-note::before{content:'🔒';font-size:12px;}
+
+/* SUCCESS OVERLAY */
+.success-overlay{
+  position:fixed;inset:0;z-index:8000;
+  background:rgba(30,90,50,.95);
+  backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:20px;
+  opacity:0;pointer-events:none;transition:opacity .5s;
+  text-align:center;padding:40px;
+}
+.success-overlay.show{opacity:1;pointer-events:auto;}
+.success-icon{font-size:56px;animation:bounceIn .6s ease both;}
+@keyframes bounceIn{0%{transform:scale(0);}60%{transform:scale(1.2);}100%{transform:scale(1);}}
+.success-title{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-style:italic;color:#e8f5ee;}
+.success-sub{font-family:'Jost',sans-serif;font-size:14px;font-weight:300;color:rgba(232,245,238,.65);max-width:400px;line-height:1.8;}
+.success-back{
+  margin-top:8px;padding:13px 28px;border:1px solid rgba(232,245,238,.3);
+  color:#e8f5ee;background:transparent;border-radius:50px;
+  font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .3s;
+}
+.success-back:hover{background:rgba(232,245,238,.1);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .checkout-wrap{grid-template-columns:1fr;padding:0 20px 80px;}
+  nav{padding:16px 20px;}
+  .hero{padding:90px 20px 40px;}
+  .summary-panel{position:static;}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="curRing"></div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon">✦</div>
+  <h2 class="success-title">Merci pour ta confiance</h2>
+  <p class="success-sub">Ton e-book t'attend. Dès confirmation du paiement, tu recevras le lien de téléchargement par e-mail dans les plus brefs délais.</p>
+  <button class="success-back" onclick="document.getElementById('successOverlay').classList.remove('show')">Revenir à la boutique</button>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Luz dans le Cœur</div>
+  <button class="nav-back" onclick="window.history.back()">Retour</button>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Boutique · Paiement sécurisé</div>
+  <h1 class="hero-title">Choisis ton e-book<br>& ta méthode de paiement</h1>
+  <p class="hero-sub">Téléchargement immédiat après confirmation</p>
+</div>
+
+<div class="checkout-wrap">
+
+  <!-- LEFT COLUMN -->
+  <div style="display:flex;flex-direction:column;gap:20px;">
+
+    <!-- STEP 1 — BOOK SELECTION -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-step">1</div>
+        <div class="panel-title">Sélectionne ton e-book</div>
+      </div>
+
+      <div class="book-list" id="bookList">
+
+        <div class="book-item" data-price="29" data-name="L'Alchimie du Soi" data-cat="Transformation" data-img="https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Transformation</div>
+            <div class="bi-name">L'Alchimie du Soi</div>
+          </div>
+          <div class="bi-price">29 €</div>
+        </div>
+
+        <div class="book-item" data-price="28" data-name="Mindset & Réussite" data-cat="Développement" data-img="https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Développement</div>
+            <div class="bi-name">Mindset & Réussite</div>
+          </div>
+          <div class="bi-price">28 €</div>
+        </div>
+
+        <div class="book-item" data-price="22" data-name="Finance Intuitive" data-cat="Finance" data-img="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Finance</div>
+            <div class="bi-name">Finance Intuitive</div>
+          </div>
+          <div class="bi-price">22 €</div>
+        </div>
+
+        <div class="book-item" data-price="26" data-name="Méditation Avancée" data-cat="Pleine conscience" data-img="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Pleine conscience</div>
+            <div class="bi-name">Méditation Avancée</div>
+          </div>
+          <div class="bi-price">26 €</div>
+        </div>
+
+        <div class="book-item" data-price="24" data-name="Stratégie Digitale" data-cat="Marketing" data-img="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Marketing</div>
+            <div class="bi-name">Stratégie Digitale</div>
+          </div>
+          <div class="bi-price">24 €</div>
+        </div>
+
+        <div class="book-item" data-price="24" data-name="Leadership Authentique" data-cat="Management" data-img="https://images.unsplash.com/photo-1448375240586-882707db888b?w=200&q=70" onclick="selectBook(this)">
+          <div class="bi-radio"></div>
+          <div class="bi-img" style="background-image:url('https://images.unsplash.com/photo-1448375240586-882707db888b?w=200&q=70');"></div>
+          <div class="bi-info">
+            <div class="bi-cat">Management</div>
+            <div class="bi-name">Leadership Authentique</div>
+          </div>
+          <div class="bi-price">24 €</div>
+        </div>
+
+      </div>
+
+      <div class="panel-divider"></div>
+      <div class="pack-cta">
+        <div class="pack-cta-text">
+          <strong>Pack complet — 5 e-books</strong>
+          Économise 30 € · tout accéder d'un coup
+        </div>
+        <button class="pack-tag" onclick="selectPack()">99 € →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — PAYMENT METHOD -->
+    <div class="panel payment-panel">
+      <div class="panel-header">
+        <div class="panel-step">2</div>
+        <div class="panel-title">Méthode de paiement</div>
+      </div>
+      <div class="pay-methods">
+
+        <!-- PAYPAL -->
+        <div class="pay-method active" id="pm-paypal" onclick="selectMethod('paypal')">
+          <div class="pm-header">
+            <div class="pm-radio"></div>
+            <div class="pm-icon paypal">PayPal</div>
+            <div>
+              <div class="pm-name">PayPal</div>
+              <div class="pm-desc">Paiement sécurisé via votre compte PayPal</div>
+            </div>
+            <span class="pm-badge fast">Rapide</span>
+          </div>
+          <div class="pm-body">
+            <p class="paypal-info">Tu seras redirigé·e vers PayPal pour finaliser ton paiement en toute sécurité. Aucune information bancaire partagée.</p>
+            <button class="paypal-link" onclick="handlePayment()">
+              Payer avec PayPal
+            </button>
+            <p class="paypal-sub">Protégé par la garantie acheteur PayPal</p>
+          </div>
+        </div>
+
+        <!-- LYDIA -->
+        <div class="pay-method" id="pm-lydia" onclick="selectMethod('lydia')">
+          <div class="pm-header">
+            <div class="pm-radio"></div>
+            <div class="pm-icon lydia">Lydia</div>
+            <div>
+              <div class="pm-name">Lydia / Sumeria</div>
+              <div class="pm-desc">Paiement mobile instantané</div>
+            </div>
+            <span class="pm-badge fast">Instantané</span>
+          </div>
+          <div class="pm-body">
+            <p class="lydia-info">Envoie le montant directement via Lydia ou Sumeria en 3 étapes :</p>
+            <ul class="lydia-steps">
+              <li>Ouvre l'app Lydia ou Sumeria</li>
+              <li>Cherche le compte <strong>Luz dans le Cœur</strong></li>
+              <li>Indique le titre de l'e-book en référence</li>
+            </ul>
+            <div class="lydia-handle" onclick="copyLydia()">
+              @luzdanslecœur
+              <button class="copy-btn">Copier</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIREMENT -->
+        <div class="pay-method" id="pm-virement" onclick="selectMethod('virement')">
+          <div class="pm-header">
+            <div class="pm-radio"></div>
+            <div class="pm-icon virement">IBAN</div>
+            <div>
+              <div class="pm-name">Virement bancaire</div>
+              <div class="pm-desc">Transfert sécurisé depuis votre banque</div>
+            </div>
+            <span class="pm-badge secure">Sécurisé</span>
+          </div>
+          <div class="pm-body">
+            <p class="virement-info">Effectue un virement avec les coordonnées ci-dessous. L'e-book sera envoyé dès réception (1-2 jours ouvrés).</p>
+            <div class="bank-detail">
+              <div class="bank-label">Bénéficiaire</div>
+              <div class="bank-value">Luz dans le Cœur <button class="copy-btn" onclick="copyText('Luz dans le Coeur')">Copier</button></div>
+            </div>
+            <div class="bank-detail">
+              <div class="bank-label">IBAN</div>
+              <div class="bank-value">FR76 XXXX XXXX XXXX XXXX XXXX XXX <button class="copy-btn" onclick="copyText('FR76 XXXX XXXX XXXX XXXX XXXX XXX')">Copier</button></div>
+            </div>
+            <div class="bank-detail">
+              <div class="bank-label">Référence (obligatoire)</div>
+              <div class="bank-value" id="viremRef" style="font-size:13px;">Sélectionne un e-book d'abord</div>
+            </div>
+            <p class="bank-note">⚠️ Indique bien le titre de l'e-book en référence du virement pour un traitement rapide.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN — SUMMARY -->
+  <div class="summary-panel">
+    <div class="summary-body">
+      <div class="sum-title">Récapitulatif</div>
+
+      <div id="sumBook" class="sum-empty">Aucun e-book sélectionné</div>
+
+      <div class="sum-row">
+        <span class="sum-label">Sous-total</span>
+        <span class="sum-value" id="sumSub">—</span>
+      </div>
+      <div class="sum-row">
+        <span class="sum-label">Livraison</span>
+        <span class="sum-value" style="color:#2d8a4e;">Gratuite</span>
+      </div>
+      <div class="sum-total">
+        <span class="sum-total-label">Total</span>
+        <span class="sum-total-value" id="sumTotal">0 €</span>
+      </div>
+
+      <button class="btn-confirm" id="btnConfirm" disabled onclick="handlePayment()">
+        Confirmer le paiement
+      </button>
+      <div class="secure-note">Paiement 100% sécurisé</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Cursor
+const cur=document.getElementById('cur'),ring=document.getElementById('curRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function af(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(af);})();
+document.querySelectorAll('button,.book-item,.pay-method').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='48px';ring.style.height='48px';});
+  el.addEventListener('mouseleave',()=>{ring.style.width='30px';ring.style.height='30px';});
+});
+
+let selectedBook = null;
+let selectedMethod = 'paypal';
+
+function selectBook(el) {
+  document.querySelectorAll('.book-item').forEach(i=>i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedBook = {
+    name: el.dataset.name,
+    price: parseInt(el.dataset.price),
+    cat: el.dataset.cat,
+    img: el.dataset.img,
+  };
+  updateSummary();
+}
+
+function selectPack() {
+  document.querySelectorAll('.book-item').forEach(i=>i.classList.remove('selected'));
+  selectedBook = { name: 'Pack Complet — 5 e-books', price: 99, cat: 'Collection', img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=200&q=70' };
+  updateSummary();
+}
+
+function selectMethod(m) {
+  selectedMethod = m;
+  document.querySelectorAll('.pay-method').forEach(el=>el.classList.remove('active'));
+  document.getElementById('pm-'+m).classList.add('active');
+}
+
+function updateSummary() {
+  const sumBook = document.getElementById('sumBook');
+  const sumSub = document.getElementById('sumSub');
+  const sumTotal = document.getElementById('sumTotal');
+  const btn = document.getElementById('btnConfirm');
+  const viremRef = document.getElementById('viremRef');
+
+  if (!selectedBook) {
+    sumBook.className='sum-empty';
+    sumBook.innerHTML='Aucun e-book sélectionné';
+    sumSub.textContent='—';
+    sumTotal.textContent='0 €';
+    btn.disabled=true;
+    return;
+  }
+
+  sumBook.className='sum-book';
+  sumBook.innerHTML=`
+    <div class="sum-book-img" style="background-image:url('${selectedBook.img}');"></div>
+    <div>
+      <div class="sum-book-name">${selectedBook.name}</div>
+      <div class="sum-book-cat">${selectedBook.cat}</div>
+    </div>
+  `;
+  sumSub.textContent = selectedBook.price + ' €';
+  sumTotal.textContent = selectedBook.price + ' €';
+  btn.disabled = false;
+  viremRef.textContent = selectedBook.name;
+}
+
+function handlePayment() {
+  if (!selectedBook) return;
+  // Simulate confirmation
+  setTimeout(()=>{ document.getElementById('successOverlay').classList.add('show'); }, 300);
+}
+
+function copyText(t) {
+  navigator.clipboard.writeText(t).then(()=>{
+    // small feedback
+    const el = event.target;
+    const orig = el.textContent;
+    el.textContent = 'Copié ✓';
+    setTimeout(()=>{ el.textContent = orig; }, 1500);
+  });
+}
+
+function copyLydia() {
+  copyText('@luzdanslecœur');
+}
+</script>
+</body>
+</html>

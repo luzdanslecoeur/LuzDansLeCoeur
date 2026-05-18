@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chargement…</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a;}
+
+/* ===== BUTTERFLY SVG ===== */
+.butterfly{
+  position:absolute;
+  width:80px;
+  transform-origin:center center;
+  filter:drop-shadow(0 0 8px rgba(80,200,130,.4));
+  pointer-events:none;
+  z-index:10;
+}
+
+/* Wing flap */
+.wing-left{
+  transform-origin:right center;
+  animation:flapL .35s ease-in-out infinite alternate;
+}
+.wing-right{
+  transform-origin:left center;
+  animation:flapR .35s ease-in-out infinite alternate;
+}
+@keyframes flapL{
+  from{transform:rotateY(0deg) scaleX(1);}
+  to{transform:rotateY(55deg) scaleX(.45);}
+}
+@keyframes flapR{
+  from{transform:rotateY(0deg) scaleX(1);}
+  to{transform:rotateY(-55deg) scaleX(.45);}
+}
+
+/* LOADING TEXT */
+.loading-wrap{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:5;
+  gap:20px;
+}
+.loading-word{
+  font-family:'Playfair Display',serif;
+  font-size:14px;font-style:italic;
+  color:rgba(80,200,130,.6);
+  letter-spacing:6px;
+  animation:pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:.3;}50%{opacity:.9;}}
+
+/* Progress bar */
+.progress-wrap{
+  width:160px;height:1px;
+  background:rgba(80,200,130,.12);
+  border-radius:1px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,rgba(80,200,130,.4),rgba(120,230,160,.8));
+  width:0%;
+  border-radius:1px;
+  transition:width .1s linear;
+}
+
+/* Stars / particles */
+.star{
+  position:absolute;border-radius:50%;
+  background:rgba(80,200,130,.5);
+  pointer-events:none;
+  animation:starTwinkle ease-in-out infinite alternate;
+}
+@keyframes starTwinkle{from{opacity:.1;}to{opacity:.6;}}
+
+/* Page fade in */
+.fade-out{
+  animation:fadeOut .5s ease forwards;
+}
+@keyframes fadeOut{
+  from{opacity:1;}
+  to{opacity:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- Stars background -->
+<div id="stars"></div>
+
+<!-- Loading text + bar -->
+<div class="loading-wrap">
+  <div class="loading-word">chargement</div>
+  <div class="progress-wrap">
+    <div class="progress-fill" id="bar"></div>
+  </div>
+</div>
+
+<!-- Butterfly — starts hidden, positioned by JS -->
+<svg class="butterfly" id="butterfly" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Left wing -->
+  <g class="wing-left">
+    <path d="M60,38 Q30,5 5,15 Q-8,35 8,52 Q28,68 60,44 Z"
+      fill="rgba(60,180,100,.7)" stroke="rgba(80,200,130,.4)" stroke-width=".8"/>
+    <path d="M60,44 Q35,65 18,72 Q8,65 12,55 Q25,45 60,48 Z"
+      fill="rgba(40,150,80,.6)" stroke="rgba(80,200,130,.3)" stroke-width=".6"/>
+    <!-- vein lines -->
+    <path d="M60,40 Q40,20 15,22" fill="none" stroke="rgba(120,230,150,.3)" stroke-width=".5"/>
+    <path d="M60,44 Q40,55 22,62" fill="none" stroke="rgba(120,230,150,.25)" stroke-width=".5"/>
+  </g>
+  <!-- Right wing -->
+  <g class="wing-right">
+    <path d="M60,38 Q90,5 115,15 Q128,35 112,52 Q92,68 60,44 Z"
+      fill="rgba(60,180,100,.7)" stroke="rgba(80,200,130,.4)" stroke-width=".8"/>
+    <path d="M60,44 Q85,65 102,72 Q112,65 108,55 Q95,45 60,48 Z"
+      fill="rgba(40,150,80,.6)" stroke="rgba(80,200,130,.3)" stroke-width=".6"/>
+    <path d="M60,40 Q80,20 105,22" fill="none" stroke="rgba(120,230,150,.3)" stroke-width=".5"/>
+    <path d="M60,44 Q80,55 98,62" fill="none" stroke="rgba(120,230,150,.25)" stroke-width=".5"/>
+  </g>
+  <!-- Body -->
+  <ellipse cx="60" cy="43" rx="2.5" ry="12" fill="rgba(30,80,50,.8)" stroke="rgba(80,200,130,.4)" stroke-width=".6"/>
+  <!-- Antennae -->
+  <line x1="60" y1="31" x2="50" y2="18" stroke="rgba(80,200,130,.5)" stroke-width=".8"/>
+  <circle cx="50" cy="18" r="1.5" fill="rgba(80,200,130,.6)"/>
+  <line x1="60" y1="31" x2="70" y2="18" stroke="rgba(80,200,130,.5)" stroke-width=".8"/>
+  <circle cx="70" cy="18" r="1.5" fill="rgba(80,200,130,.6)"/>
+  <!-- Shimmer dots -->
+  <circle cx="35" cy="30" r="1.5" fill="rgba(180,255,200,.3)"/>
+  <circle cx="85" cy="30" r="1.5" fill="rgba(180,255,200,.3)"/>
+  <circle cx="28" cy="52" r="1" fill="rgba(180,255,200,.25)"/>
+  <circle cx="92" cy="52" r="1" fill="rgba(180,255,200,.25)"/>
+</svg>
+
+<script>
+// Get destination from URL param
+const params = new URLSearchParams(window.location.search);
+const dest = params.get('next') || 'page2.html';
+
+// Stars
+const starsEl = document.getElementById('stars');
+for(let i=0;i<60;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  const sz=Math.random()*2+.5;
+  s.style.cssText=`
+    width:${sz}px;height:${sz}px;
+    left:${Math.random()*100}%;top:${Math.random()*100}%;
+    animation-duration:${Math.random()*3+2}s;
+    animation-delay:${Math.random()*3}s;
+  `;
+  starsEl.appendChild(s);
+}
+
+// Butterfly flight path — smooth bezier-like movement
+const bf = document.getElementById('butterfly');
+const bar = document.getElementById('bar');
+
+let x = -100, y = window.innerHeight * .5;
+let tx = window.innerWidth * .3, ty = window.innerHeight * .4;
+let vx = 0, vy = 0;
+let angle = 0;
+let startTime = null;
+const DURATION = 1600; // ms before redirect
+
+// Waypoints the butterfly visits
+const waypoints = [
+  {x: window.innerWidth*.15, y: window.innerHeight*.5},
+  {x: window.innerWidth*.35, y: window.innerHeight*.25},
+  {x: window.innerWidth*.6,  y: window.innerHeight*.6},
+  {x: window.innerWidth*.75, y: window.innerHeight*.3},
+  {x: window.innerWidth*.9,  y: window.innerHeight*.5},
+];
+let wpIdx = 0;
+
+function lerp(a,b,t){return a+(b-a)*t;}
+function easeInOut(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function animate(ts){
+  if(!startTime) startTime=ts;
+  const elapsed = ts - startTime;
+  const progress = Math.min(elapsed/DURATION, 1);
+
+  // Progress bar
+  bar.style.width = (progress*100) + '%';
+
+  // Move toward current waypoint
+  const wp = waypoints[wpIdx];
+  const dx = wp.x - x;
+  const dy = wp.y - y;
+  const dist = Math.sqrt(dx*dx+dy*dy);
+
+  if(dist < 30 && wpIdx < waypoints.length-1){
+    wpIdx++;
+  }
+
+  // Smooth follow
+  vx += (wp.x - x) * .018;
+  vy += (wp.y - y) * .018;
+  vx *= .88;
+  vy *= .88;
+  // Add gentle sine wobble
+  const wobble = Math.sin(ts*.003)*12;
+  vy += wobble*.04;
+
+  x += vx;
+  y += vy;
+
+  // Rotation based on velocity
+  const targetAngle = Math.atan2(vy,vx) * (180/Math.PI);
+  angle = lerp(angle, targetAngle, .08);
+
+  bf.style.left = (x - 40) + 'px';
+  bf.style.top  = (y - 30) + 'px';
+  bf.style.transform = `rotate(${angle*.3}deg) scale(${1+Math.abs(vy)*.015})`;
+
+  // Fairy dust trail
+  if(Math.random() < .25){
+    const dot = document.createElement('div');
+    dot.style.cssText=`
+      position:absolute;border-radius:50%;pointer-events:none;z-index:8;
+      width:${Math.random()*4+2}px;height:${Math.random()*4+2}px;
+      left:${x + (Math.random()-0.5)*20}px;
+      top:${y + (Math.random()-0.5)*20}px;
+      background:rgba(80,200,130,${Math.random()*.5+.2});
+      box-shadow:0 0 4px rgba(80,200,130,.6);
+      transition:opacity 1s,transform 1s;
+    `;
+    document.body.appendChild(dot);
+    setTimeout(()=>{dot.style.opacity='0';dot.style.transform='translateY(-20px) scale(0)';},50);
+    setTimeout(()=>{if(dot.parentNode)dot.parentNode.removeChild(dot);},1100);
+  }
+
+  if(progress < 1){
+    requestAnimationFrame(animate);
+  } else {
+    // Fade out and redirect
+    document.body.style.transition='opacity .5s ease';
+    document.body.style.opacity='0';
+    setTimeout(()=>{ window.location.href=dest; }, 500);
+  }
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
